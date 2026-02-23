@@ -14,14 +14,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# ═══════════════════════════════════════════════════
-# GAME DATA
-# ═══════════════════════════════════════════════════
-"""
-SQL Detective — APP COMPLETO (all-in-one)
-Onde no Mundo está o Hacker das Queries?
-"""
-
 LEVEL_LABELS = {
     "junior": "🟢 Júnior",
     "pleno":  "🟡 Pleno",
