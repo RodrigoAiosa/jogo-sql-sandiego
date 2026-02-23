@@ -911,7 +911,6 @@ def format_player_card(rec: dict) -> str:
 
 
 """
-SQL Detective — Streamlit App
 Onde no Mundo está o Hacker das Queries?
 """
 
