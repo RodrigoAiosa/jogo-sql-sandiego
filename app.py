@@ -1,4 +1,23 @@
 """
+SQL Detective — all-in-one
+"""
+import json
+import os
+import random
+from datetime import datetime
+import streamlit as st
+
+st.set_page_config(
+    page_title="SQL Detective",
+    page_icon="🔍",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
+
+# ═══════════════════════════════════════════════════
+# GAME DATA
+# ═══════════════════════════════════════════════════
+"""
 SQL Detective — APP COMPLETO (all-in-one)
 Onde no Mundo está o Hacker das Queries?
 """
@@ -739,9 +758,9 @@ CASES = [
     }
 ]
 
-
-import json
-import os
+# ═══════════════════════════════════════════════════
+# PLAYER STORE
+# ═══════════════════════════════════════════════════
 from datetime import datetime
 
 SAVE_FILE = "players_progress.txt"
@@ -907,18 +926,13 @@ SQL Detective — Streamlit App
 Onde no Mundo está o Hacker das Queries?
 """
 
-import random
-import streamlit as st
+# ═══════════════════════════════════════════════════
+# APP
+# ═══════════════════════════════════════════════════
 
 # ─────────────────────────────────────────────
 # PAGE CONFIG
 # ─────────────────────────────────────────────
-st.set_page_config(
-    page_title="SQL Detective",
-    page_icon="🔍",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
 
 # ─────────────────────────────────────────────
 # CSS
