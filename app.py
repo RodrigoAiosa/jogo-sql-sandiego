@@ -909,11 +909,6 @@ def format_player_card(rec: dict) -> str:
     ]
     return "\n".join(lines)
 
-
-"""
-Onde no Mundo está o Hacker das Queries?
-"""
-
 # ═══════════════════════════════════════════════════
 # APP
 # ═══════════════════════════════════════════════════
