@@ -1,6 +1,3 @@
-"""
-SQL Detective — all-in-one
-"""
 import json
 import os
 import random
