@@ -1,0 +1,165 @@
+"""
+SQL Detective — Player Persistence
+Salva e carrega o progresso dos jogadores em arquivo .txt (JSON lines)
+"""
+
+import json
+import os
+from datetime import datetime
+
+SAVE_FILE = "players_progress.txt"
+
+
+def _now() -> str:
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+# ─────────────────────────────────────────────────────────
+# LOW-LEVEL: ler e escrever o arquivo
+# ─────────────────────────────────────────────────────────
+
+def _load_all() -> dict:
+    """Carrega todos os jogadores do arquivo. Retorna dict {nome_lower: record}."""
+    records = {}
+    if not os.path.exists(SAVE_FILE):
+        return records
+    with open(SAVE_FILE, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                record = json.loads(line)
+                key = record["name"].lower()
+                # mantém o registro mais recente por nome
+                records[key] = record
+            except (json.JSONDecodeError, KeyError):
+                continue
+    return records
+
+
+def _save_all(records: dict) -> None:
+    """Reescreve o arquivo com todos os registros."""
+    with open(SAVE_FILE, "w", encoding="utf-8") as f:
+        for record in records.values():
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+
+# ─────────────────────────────────────────────────────────
+# PUBLIC API
+# ─────────────────────────────────────────────────────────
+
+def player_exists(name: str) -> bool:
+    records = _load_all()
+    return name.lower() in records
+
+
+def create_player(name: str, level: str) -> dict:
+    """Cria novo jogador e salva. Retorna o record criado."""
+    records = _load_all()
+    record = {
+        "name": name,
+        "level": level,
+        "created_at": _now(),
+        "last_seen": _now(),
+        "games_played": 0,
+        "games_won": 0,
+        "total_score": 0,
+        "best_score": 0,
+        "clues_collected": 0,
+        "wrong_travels": 0,
+        "history": [],          # lista de partidas encerradas
+    }
+    records[name.lower()] = record
+    _save_all(records)
+    return record
+
+
+def load_player(name: str) -> dict | None:
+    records = _load_all()
+    return records.get(name.lower())
+
+
+def save_player(record: dict) -> None:
+    """Atualiza (upsert) o registro de um jogador."""
+    records = _load_all()
+    record["last_seen"] = _now()
+    records[record["name"].lower()] = record
+    _save_all(records)
+
+
+def record_game_result(
+    name: str,
+    won: bool,
+    score: int,
+    level: str,
+    clues: int,
+    wrong_travels: int,
+    location_reached: str,
+) -> None:
+    """Registra o resultado de uma partida no histórico do jogador."""
+    records = _load_all()
+    key = name.lower()
+    if key not in records:
+        return
+
+    rec = records[key]
+    rec["games_played"] += 1
+    rec["clues_collected"] += clues
+    rec["wrong_travels"] += wrong_travels
+    rec["total_score"] += score
+    rec["last_seen"] = _now()
+
+    if won:
+        rec["games_won"] += 1
+
+    if score > rec["best_score"]:
+        rec["best_score"] = score
+
+    # histórico compacto (mantém últimos 20)
+    entry = {
+        "date": _now(),
+        "level": level,
+        "won": won,
+        "score": score,
+        "clues": clues,
+        "wrong_travels": wrong_travels,
+        "location_reached": location_reached,
+    }
+    rec.setdefault("history", []).append(entry)
+    rec["history"] = rec["history"][-20:]  # últimas 20 partidas
+
+    records[key] = rec
+    _save_all(records)
+
+
+def list_all_players() -> list[dict]:
+    """Retorna todos os jogadores ordenados por melhor pontuação."""
+    records = _load_all()
+    players = list(records.values())
+    players.sort(key=lambda p: p.get("best_score", 0), reverse=True)
+    return players
+
+
+def format_player_card(rec: dict) -> str:
+    """Retorna uma string legível do perfil do jogador."""
+    win_rate = 0
+    if rec.get("games_played", 0) > 0:
+        win_rate = int(rec["games_won"] / rec["games_played"] * 100)
+
+    lines = [
+        f"╔══════════════════════════════════════╗",
+        f"  DETETIVE: {rec['name'].upper()}",
+        f"  Nível:    {rec['level']}",
+        f"  Desde:    {rec.get('created_at', '—')}",
+        f"  Último:   {rec.get('last_seen', '—')}",
+        f"──────────────────────────────────────",
+        f"  Partidas jogadas : {rec.get('games_played', 0)}",
+        f"  Vitórias         : {rec.get('games_won', 0)} ({win_rate}%)",
+        f"  Melhor pontuação : {rec.get('best_score', 0)}",
+        f"  Total de pontos  : {rec.get('total_score', 0)}",
+        f"  Pistas coletadas : {rec.get('clues_collected', 0)}",
+        f"  Viagens erradas  : {rec.get('wrong_travels', 0)}",
+        f"╚══════════════════════════════════════╝",
+    ]
+    return "\n".join(lines)
